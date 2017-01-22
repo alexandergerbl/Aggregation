@@ -107,8 +107,10 @@ namespace ht
         {
             for(auto currPartition = 0; currPartition < globalPartitions<SIZE, MAXELEMENTS>.size(); ++currPartition)
             {
+		mutex<SIZE>[currPartition].lock();
                 globalPartitions<SIZE, MAXELEMENTS>[currPartition].reserve(globalPartitions<SIZE, MAXELEMENTS>[currPartition].size() + this->entries[currPartition].size());
                 std::move(std::begin(this->entries[currPartition]), std::end(this->entries[currPartition]), std::back_inserter(globalPartitions<SIZE, MAXELEMENTS>[currPartition]));
+		mutex<SIZE>[currPartition].unlock();
                 this->entries[currPartition].clear();
             }
         }
