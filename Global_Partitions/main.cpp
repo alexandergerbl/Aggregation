@@ -264,15 +264,17 @@ tbb::concurrent_hash_map<Key_t, Row> ThreadManager<SIZE, MAXELEMENTS>::result;
 
 int main(int argc, char** argv)
 {
-    if(argc != 2)
+    if(argc != 4)
     {
-        std::cerr << "usage:\n\thyperlike_parallel <num_threads>" << std::endl;
+        std::cerr << "usage:\n\thyperlike_parallel <num_threads> <num_unique_keys> <num_rows>" << std::endl;
         exit(0);
     }
 
     int num_threads = std::atoi(argv[1]);
+    int num_unique_keys = std::atoi(argv[2]);
+    int num_rows = std::atoi(argv[3]);
     
-    RelationGenerator generator(NUM_ROWS, NUM_UNIQUE_KEYS, UNIFORM_DISTRIBUTED_KEYS);
+    RelationGenerator generator(num_rows, num_unique_keys, UNIFORM_DISTRIBUTED_KEYS);
     Relation const relation = generator.generateRandomRelation();  
     
     //Checks whether relation was build correctly
@@ -280,7 +282,7 @@ int main(int argc, char** argv)
     
     ThreadManager<SIZE, MAXELEMENTS> manager(num_threads);
     
-    timeAndProfileMT("global_partitions (lock)", NUM_ROWS, [&](){
+    timeAndProfileMT_OperationsPerSecond(num_threads, NUM_ROWS, [&](){
         //put aggregations here    
         manager.parallelGroup(relation);
     } );

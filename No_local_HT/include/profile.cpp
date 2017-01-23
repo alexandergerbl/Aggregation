@@ -165,3 +165,16 @@ void timeAndProfileMT(std::string s,uint64_t n,std::function<void()> fn,bool mem
       std::cout << (getCurrentRSS()-memStart)/(1024.0*1024) << "MB";
    std::cout << std::endl;
 }
+
+
+//ADDED to print gnuplot output
+void timeAndProfileMT_OperationsPerSecond(int num_threads, uint64_t n,std::function<void()> fn,bool mem=false) {
+   
+   PerfEventMT instructions(PERF_TYPE_HARDWARE,PERF_COUNT_HW_INSTRUCTIONS);
+   
+   double start = gettime();
+   fn();
+   double end = gettime();
+   std::cout << num_threads << "\t" << ((n/1e6)/(end-start)) << std::endl;
+   
+}
