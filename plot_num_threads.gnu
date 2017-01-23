@@ -12,4 +12,4 @@ set xtics 1
 set tics out
 set autoscale  y
 
-plot filename1 with line title 'no_local_ht' , filename2 with line title 'hyperlike shared' , filename3 with line title 'hyperlike vector' , filename4 with line title 'global partitions(lock)'
+plot filename1 using 1:3 with line title 'no_local_ht' , filename2 using 1:3 with line title 'hyperlike shared' , filename3 using 1:3 with line title 'hyperlike vector' , filename4 using 1:3 with line title 'global partitions(lock)'

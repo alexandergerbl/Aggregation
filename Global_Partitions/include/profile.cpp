@@ -167,14 +167,14 @@ void timeAndProfileMT(std::string s,uint64_t n,std::function<void()> fn,bool mem
 }
 
 //ADDED to print gnuplot output
-void timeAndProfileMT_OperationsPerSecond(int num_threads, uint64_t n,std::function<void()> fn,bool mem=false) {
+void timeAndProfileMT_OperationsPerSecond(int num_threads, int num_unique, uint64_t n,std::function<void()> fn,bool mem=false) {
    
    PerfEventMT instructions(PERF_TYPE_HARDWARE,PERF_COUNT_HW_INSTRUCTIONS);
    
    double start = gettime();
    fn();
    double end = gettime();
-   std::cout << num_threads << "\t" << ((n/1e6)/(end-start)) << std::endl;
+   std::cout << num_threads << "\t" << num_unique<< "\t"  << ((n/1e6)/(end-start)) << std::endl;
    
 }
 

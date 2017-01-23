@@ -390,7 +390,7 @@ int main(int argc, char** argv)
     
     ThreadManager<1000, 10'000> manager(num_threads);
     
-    timeAndProfileMT_OperationsPerSecond(num_threads, NUM_ROWS, [&](){
+    timeAndProfileMT_OperationsPerSecond(num_threads, num_unique_keys, NUM_ROWS, [&](){
         //put aggregations here    
         manager.parallelGroup(relation);
     } );
