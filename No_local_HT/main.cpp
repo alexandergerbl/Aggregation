@@ -50,85 +50,81 @@
  */
 
 
-
-namespace ht
-{
-        
     
-    /*
-     * params:
-     *      - SIZE          how many different entries this hashtable should have
-     *      - MAXELEMENTS   how many different keys this hashtable should store at once
-     */
-    template<int SIZE, int MAXELEMENTS>
-    class HashTable 
-    {
-        int64_t numElements;
-    public:
-        
-        std::array<std::vector<Row>, SIZE> localPartitions;
-        
-        HashTable() {};
-        
-        void add(Row const& row)
-        {
-            this->localPartitions[getIndex(row.key)].emplace_back(row);
-            
-            this->numElements++;
-            
-            if(isFull())
-            {
-                this->flush();                
-            }
-        }
-        
-    private:
-        inline bool isFull() const
-        {
-            return this->numElements == MAXELEMENTS;
-        }
-        
-        inline int getIndex(Key_t const key) const
-        {
-            return key % SIZE;
-        }
-    public:
-        inline void flush()
-        {
-            for(auto currPartition = 0; currPartition < this->localPartitions.size(); ++currPartition)
-            {
-                this->localPartitions[currPartition].reserve(this->localPartitions[currPartition].size() + this->localPartitions[currPartition].size());
-                std::move(std::begin(this->localPartitions[currPartition]), std::end(this->localPartitions[currPartition]), std::back_inserter(this->localPartitions[currPartition]));
-                this->localPartitions[currPartition].clear();
-            }
-            this->numElements = 0;
-        }
-    };
 
+/*
+ * returns number of <key, value>-pairs that fit into L1 Cache 
+ * 
+ */
+template<int CACHE_SIZE, typename Key_t, typename Value_t>
+constexpr int getMaxElements()
+{
+    return (CACHE_SIZE / (sizeof(Key_t) + sizeof(Value_t)));
+}
+
+
+constexpr int nextLowerPowerOfTwo(const int number)
+{
+    return pow(2, log2(number));
+}
+
+
+
+template<int CACHE_SIZE>
+struct HashTable
+{    
+    
+    
+    static const Key_t max_elements =  nextLowerPowerOfTwo(getMaxElements<CACHE_SIZE, Key_t, Value_t>());
+    
+    std::array<std::vector<Row>, max_elements> localPartitions;
+    
+    int64_t bit_mask;
+    
+    HashTable()
+    {        
+        this->bit_mask = this->max_elements-1;        
+    };    
+    
+    inline int64_t hash(Key_t key) const
+    // Hash
+    {
+    uint64_t r=88172645463325252ull^key;
+    r^=(r<<13);
+    r^=(r>>7);
+    return (r^=(r<<17));
+    }
+    
+    //hash key before putting it in here
+    inline int getIndex(Key_t key) const
+    {
+        return key & this->bit_mask;
+    }
+    
+    void insert(Key_t key, Value_t value)
+    {
+        auto index = getIndex(hash(key));
+        
+        this->localPartitions[index].emplace_back(Row(key, value));       
+    }
 };
 
 
 //ThreadWorker contains all data that each thread has to store locally
 
-template<int SIZE, int MAXELEMENTS>
+template<int CACHE_SIZE>
 class ThreadWorker
 {
 public:
     
-    std::shared_ptr<ht::HashTable<SIZE, MAXELEMENTS>> localHashTable;
+    HashTable<CACHE_SIZE> localHashTable;
     
     std::unordered_map<Key_t, Value_t> hashTable_secondPhase;
-    
-    ThreadWorker()
-    {
-        localHashTable = std::make_shared<ht::HashTable<SIZE, MAXELEMENTS>>();
-        
-    }
     
 };
 
 
-template<int SIZE, int MAXELEMENTS>
+template<int CACHE_SIZE>
 class ThreadManager
 {
     /*
@@ -136,14 +132,17 @@ class ThreadManager
     * GLOBAL PARTITIONS
     * 
     */    
-    static std::array<std::vector<Row>, SIZE> globalPartitions;
+    static const Key_t partition_size = nextLowerPowerOfTwo(getMaxElements<CACHE_SIZE, Key_t, Value_t>());
+    static std::array<std::vector<Row>, ThreadManager<CACHE_SIZE>::partition_size> globalPartitions;
     
     
-    typedef tbb::enumerable_thread_specific<ThreadWorker<SIZE, MAXELEMENTS>> WorkerType;
+    typedef tbb::enumerable_thread_specific<ThreadWorker<CACHE_SIZE>> WorkerType;
     static WorkerType myWorkers;
 public:
-    static tbb::concurrent_hash_map<Key_t, Row> result;
-
+    
+    static Relation result;
+    static std::mutex result_mutex;
+    
 
     int numThreads;
     
@@ -161,7 +160,7 @@ public:
             
             for(int i = r.begin(); i != r.end(); ++i)
             {
-                my_worker.localHashTable->add(this->r[i]);
+                my_worker.localHashTable.insert(this->r[i].key, this->r[i].value);
             }
         }
     };
@@ -176,9 +175,9 @@ public:
             {        
                 for(auto currWorker = myWorkers.begin(); currWorker != myWorkers.end(); ++currWorker)
                 {
-                    globalPartitions[currPartition].reserve(globalPartitions.size() + currWorker->localHashTable->localPartitions[currPartition].size());
-                    std::move(std::begin(currWorker->localHashTable->localPartitions[currPartition]), std::end(currWorker->localHashTable->localPartitions[currPartition]), std::back_inserter(globalPartitions[currPartition]));
-                    currWorker->localHashTable->localPartitions[currPartition].clear();
+                    globalPartitions[currPartition].reserve(globalPartitions.size() + currWorker->localHashTable.localPartitions[currPartition].size());
+                    std::move(std::begin(currWorker->localHashTable.localPartitions[currPartition]), std::end(currWorker->localHashTable.localPartitions[currPartition]), std::back_inserter(globalPartitions[currPartition]));
+                    currWorker->localHashTable.localPartitions[currPartition].clear();
                 }
             }
         }
@@ -199,35 +198,18 @@ public:
                     else
                         my_worker.hashTable_secondPhase[currEntry->key] += currEntry->value;
                 }
+                result_mutex.lock();
+                for(auto& hash_table_entry : my_worker.hashTable_secondPhase)
+                {
+                    result.emplace_back(Row(hash_table_entry.first, hash_table_entry.second));
+                }
+                result_mutex.unlock();
+                my_worker.hashTable_secondPhase.clear();
             }
         }
     };
     
-    struct GetResult
-    {
-        void operator()(const tbb::blocked_range<int> &r) const
-        {
-            typename WorkerType::reference my_worker = myWorkers.local();
-
-            std::for_each(my_worker.hashTable_secondPhase.begin(), my_worker.hashTable_secondPhase.end(), [&](std::pair<Key_t, Value_t> const& p)
-            {
-
-                //check all other workers
-                if(result.count(p.first) == 0)
-                {
-                    tbb::concurrent_hash_map<Key_t, Row>::accessor a;
-                    result.insert(a, p.first);
-                    a->second.value = p.second;
-                }
-                else
-                {
-                    tbb::concurrent_hash_map<Key_t, Row>::accessor a;
-                    result.insert(a, p.first);
-                    a->second.value = p.second;
-                }
-            });
-        }
-    };
+    
     
     void parallelGroup(Relation const& relation)
     {
@@ -241,43 +223,42 @@ public:
         */
      
         tbb::parallel_for(tbb::blocked_range<int>(0, relation.size()), Phase1(relation));
-        
-        //flush all localHashtables to partitions
-        for(auto it = myWorkers.begin(); it != myWorkers.end(); it++)
-        {
-            it->localHashTable->flush();
-        }
 
         // exchange partitions
-        tbb::parallel_for(tbb::blocked_range<int>(0, SIZE), ExchangePartitions());
+        tbb::parallel_for(tbb::blocked_range<int>(0, this->globalPartitions.size()), ExchangePartitions());
 
         /*
         * 
         * Phase 2
         *  
         */
-        tbb::parallel_for(tbb::blocked_range<int>(0, SIZE), Phase2());
+        tbb::parallel_for(tbb::blocked_range<int>(0, this->globalPartitions.size()), Phase2());
 
-        tbb::parallel_for(tbb::blocked_range<int>(0, SIZE), GetResult());
+        
 
     }
 };
 
 
-template<int SIZE, int MAXELEMENTS>
-std::array<std::vector<Row>, SIZE> ThreadManager<SIZE, MAXELEMENTS>::globalPartitions;
+
+template<int CACHE_SIZE>
+std::array<std::vector<Row>, ThreadManager<CACHE_SIZE>::partition_size> ThreadManager<CACHE_SIZE>::globalPartitions;
     
-template<int SIZE, int MAXELEMENTS>
-typename ThreadManager<SIZE, MAXELEMENTS>::WorkerType ThreadManager<SIZE, MAXELEMENTS>::myWorkers;
+template<int CACHE_SIZE>
+typename ThreadManager<CACHE_SIZE>::WorkerType ThreadManager<CACHE_SIZE>::myWorkers;
 
-template<int SIZE, int MAXELEMENTS>
-tbb::concurrent_hash_map<Key_t, Row> ThreadManager<SIZE, MAXELEMENTS>::result;
+template<int CACHE_SIZE>
+Relation ThreadManager<CACHE_SIZE>::result;
 
-template<int SIZE, int MAXELEMENTS>
+template<int CACHE_SIZE>
+std::mutex ThreadManager<CACHE_SIZE>::result_mutex;
+
+
+template<int CACHE_SIZE>
 Value_t getSumOfAllGroupValues()
 {
     Value_t finaleSum = 0;
-    std::for_each(ThreadManager<SIZE, MAXELEMENTS>::result.begin(), ThreadManager<SIZE, MAXELEMENTS>::result.end(), [&](std::pair<Key_t, Row> const& p){
+    std::for_each(ThreadManager<CACHE_SIZE>::result.begin(), ThreadManager<CACHE_SIZE>::result.end(), [&](std::pair<Key_t, Row> const& p){
 //      std::cout << "(" << p.first << ", " << p.second.value << ")" << std::endl;
         finaleSum += p.second.value;
     });
@@ -289,7 +270,7 @@ int main(int argc, char** argv)
 
     if(argc != 4)
     {
-        std::cerr << "usage:\n\thyperlike_parallel <num_threads> <num_unique_keys> <num_rows>" << std::endl;
+        std::cerr << "usage:\n\tglobal_partitions <num_threads> <num_unique_keys> <num_rows>" << std::endl;
         exit(0);
     }
 
@@ -297,37 +278,24 @@ int main(int argc, char** argv)
     int num_unique_keys = std::atoi(argv[2]);
     int num_rows = std::atoi(argv[3]);
     
+    bool UNIFORM_DISTRIBUTED_KEYS = true;
+    
     RelationGenerator generator(num_rows, num_unique_keys, UNIFORM_DISTRIBUTED_KEYS);
     Relation const relation = generator.generateRandomRelation();  
     
     //Checks whether relation was build correctly
     assert(relation.isCorrectSum());
     
-    std::unordered_map<Key_t, Value_t> resss;
     
-    timeAndProfile("TEST NORMAL HASHMAP", num_rows, [&](){
-        for(auto& row : relation)
-        {
-            if(resss.count(row.key) == 0)
-                resss[row.key] = row.value;
-            else
-                resss[row.key] += row.value;
-        }
-    });
+    ThreadManager<32*1024> manager(num_threads);
     
-    ThreadManager<SIZE, MAXELEMENTS> manager(num_threads);
-    
-    timeAndProfileMT_OperationsPerSecond(num_threads, num_unique_keys, NUM_ROWS, [&](){
+    timeAndProfileMT_OperationsPerSecond(num_threads, num_unique_keys, num_rows, [&](){
         //put aggregations here    
         manager.parallelGroup(relation);
     } );
     
-    auto should = relation.getSumOfWholeRelation();
-    auto is = getSumOfAllGroupValues<SIZE, MAXELEMENTS>();
-    std::cout << "should = " << should << std::endl;
-    std::cout << "is = " << is << std::endl;
+    assert(manager.result.isCorrectSum(num_rows));
     
-    assert((relation.getSumOfWholeRelation() == getSumOfAllGroupValues<SIZE, MAXELEMENTS>()));
             
 	return 0;
 }
