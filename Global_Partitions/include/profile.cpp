@@ -166,6 +166,7 @@ void timeAndProfileMT(std::string s,uint64_t n,std::function<void()> fn,bool mem
    std::cout << std::endl;
 }
 
+
 //ADDED to print gnuplot output
 void timeAndProfileMT_OperationsPerSecond(int num_threads, int num_unique, uint64_t n,std::function<void()> fn,bool mem=false) {
    uint64_t memStart=0;
@@ -178,7 +179,7 @@ void timeAndProfileMT_OperationsPerSecond(int num_threads, int num_unique, uint6
    double start = gettime();
    fn();
    double end = gettime();
- 
+   
    std::cout << num_threads << "\t" << num_unique << "\t" << ((n/1e6)/(end-start)) << " "  << (misses.readCounter()/(float)n) << " misses " << (l1misses.readCounter()/(float)n) << " L1misses " << (instructions.readCounter()/(float)n) << " instructions " << (bmiss.readCounter()/(float)n) << " bmisses "<< std::endl;
    
 }

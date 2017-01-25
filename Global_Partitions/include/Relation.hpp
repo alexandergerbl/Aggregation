@@ -10,13 +10,16 @@ typedef int64_t Value_t;
 
 class alignas(64) Row
 {
+    
 public:
+    static const int64_t EMPTY = INT64_MIN;
+    
     Key_t key;
     Value_t value;
     
     Row() 
     {
-        key = -1;
+        key = EMPTY;
         value = 0;
     }
     
@@ -48,6 +51,13 @@ public:
     {
         //little gauss
         auto correct_sum = (this->size() * (this->size() + 1))/2;
+
+        return (correct_sum == this->getSumOfWholeRelation());
+    }
+    bool isCorrectSum(int64_t num_rows) const
+    {
+        //little gauss
+        auto correct_sum = (num_rows * (num_rows + 1))/2;
 
         return (correct_sum == this->getSumOfWholeRelation());
     }

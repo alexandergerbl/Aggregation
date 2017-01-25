@@ -184,7 +184,7 @@ class ThreadManager
     static WorkerType myWorkers;
 public:
     
-    static std::vector<Row> result;
+    static Relation result;
     static std::mutex result_mutex;
     
 
@@ -298,7 +298,7 @@ template<int CACHE_SIZE>
 typename ThreadManager<CACHE_SIZE>::WorkerType ThreadManager<CACHE_SIZE>::myWorkers;
 
 template<int CACHE_SIZE>
-std::vector<Row> ThreadManager<CACHE_SIZE>::result;
+Relation ThreadManager<CACHE_SIZE>::result;
 
 template<int CACHE_SIZE>
 std::mutex ThreadManager<CACHE_SIZE>::result_mutex;
@@ -320,7 +320,7 @@ int main(int argc, char** argv)
 
     if(argc != 4)
     {
-        std::cerr << "usage:\n\thyperlike_parallel <num_threads> <num_unique_keys> <num_rows>" << std::endl;
+        std::cerr << "usage:\n\tglobal_partitions <num_threads> <num_unique_keys> <num_rows>" << std::endl;
         exit(0);
     }
 
@@ -329,7 +329,6 @@ int main(int argc, char** argv)
     int num_rows = std::atoi(argv[3]);
     
     bool UNIFORM_DISTRIBUTED_KEYS = true;
-    int NUM_ROWS = 10'000'000;
     
     RelationGenerator generator(num_rows, num_unique_keys, UNIFORM_DISTRIBUTED_KEYS);
     Relation const relation = generator.generateRandomRelation();  
@@ -340,12 +339,12 @@ int main(int argc, char** argv)
     
     ThreadManager<32*1024> manager(num_threads);
     
-    timeAndProfileMT_OperationsPerSecond(num_threads, num_unique_keys, NUM_ROWS, [&](){
+    timeAndProfileMT_OperationsPerSecond(num_threads, num_unique_keys, num_rows, [&](){
         //put aggregations here    
         manager.parallelGroup(relation);
     } );
     
-    
+    assert(manager.result.isCorrectSum(num_rows));
     
             
 	return 0;

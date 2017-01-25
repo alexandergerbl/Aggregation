@@ -54,6 +54,13 @@ public:
 
         return (correct_sum == this->getSumOfWholeRelation());
     }
+    bool isCorrectSum(int64_t num_rows) const
+    {
+        //little gauss
+        auto correct_sum = (num_rows * (num_rows + 1))/2;
+
+        return (correct_sum == this->getSumOfWholeRelation());
+    }
 };
 
 
