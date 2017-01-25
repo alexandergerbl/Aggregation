@@ -7,7 +7,7 @@
  *	Hashtable -Settings
  **/
 constexpr int SIZE = 1'000;
-constexpr int MAXELEMENTS = 10'000;
+constexpr int MAXELEMENTS = 16'000;
 
 /*
  *	Relation -Settings

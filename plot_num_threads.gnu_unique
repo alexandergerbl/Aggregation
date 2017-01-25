@@ -5,7 +5,7 @@ set grid x y
 set key left top title " "
 set logscale y
 set title "Parallelism"
-set xlabel "number of threads"
+set xlabel "unique keys"
 set xrange [0 : 10000000]
 set ylabel "Mio. Operations/sec"
 set xtics 1000000

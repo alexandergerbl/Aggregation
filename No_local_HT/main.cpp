@@ -141,10 +141,10 @@ class ThreadManager
     
     typedef tbb::enumerable_thread_specific<ThreadWorker<SIZE, MAXELEMENTS>> WorkerType;
     static WorkerType myWorkers;
-
+public:
     static tbb::concurrent_hash_map<Key_t, Row> result;
 
-public:
+
     int numThreads;
     
     ThreadManager(int num_threads) : numThreads{num_threads} {}
@@ -273,6 +273,16 @@ typename ThreadManager<SIZE, MAXELEMENTS>::WorkerType ThreadManager<SIZE, MAXELE
 template<int SIZE, int MAXELEMENTS>
 tbb::concurrent_hash_map<Key_t, Row> ThreadManager<SIZE, MAXELEMENTS>::result;
 
+template<int SIZE, int MAXELEMENTS>
+Value_t getSumOfAllGroupValues()
+{
+    Value_t finaleSum = 0;
+    std::for_each(ThreadManager<SIZE, MAXELEMENTS>::result.begin(), ThreadManager<SIZE, MAXELEMENTS>::result.end(), [&](std::pair<Key_t, Row> const& p){
+//      std::cout << "(" << p.first << ", " << p.second.value << ")" << std::endl;
+        finaleSum += p.second.value;
+    });
+    return finaleSum;
+}
 
 int main(int argc, char** argv)
 {
@@ -293,6 +303,17 @@ int main(int argc, char** argv)
     //Checks whether relation was build correctly
     assert(relation.isCorrectSum());
     
+    std::unordered_map<Key_t, Value_t> resss;
+    
+    timeAndProfile("TEST NORMAL HASHMAP", num_rows, [&](){
+        for(auto& row : relation)
+        {
+            if(resss.count(row.key) == 0)
+                resss[row.key] = row.value;
+            else
+                resss[row.key] += row.value;
+        }
+    });
     
     ThreadManager<SIZE, MAXELEMENTS> manager(num_threads);
     
@@ -301,6 +322,12 @@ int main(int argc, char** argv)
         manager.parallelGroup(relation);
     } );
     
-        
+    auto should = relation.getSumOfWholeRelation();
+    auto is = getSumOfAllGroupValues<SIZE, MAXELEMENTS>();
+    std::cout << "should = " << should << std::endl;
+    std::cout << "is = " << is << std::endl;
+    
+    assert((relation.getSumOfWholeRelation() == getSumOfAllGroupValues<SIZE, MAXELEMENTS>()));
+            
 	return 0;
 }

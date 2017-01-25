@@ -152,10 +152,10 @@ class ThreadManager
     
     typedef tbb::enumerable_thread_specific<ThreadWorker<SIZE, MAXELEMENTS>> WorkerType;
     static WorkerType myWorkers;
-
+public:
     static tbb::concurrent_hash_map<Key_t, Row> result;
 
-public:
+
     int numThreads;
     
     ThreadManager(int num_threads) : numThreads{num_threads} {}
@@ -262,8 +262,21 @@ template<int SIZE, int MAXELEMENTS>
 tbb::concurrent_hash_map<Key_t, Row> ThreadManager<SIZE, MAXELEMENTS>::result;
 
 
+
+template<int SIZE, int MAXELEMENTS>
+Value_t getSumOfAllGroupValues()
+{
+    Value_t finaleSum = 0;
+    std::for_each(ThreadManager<SIZE, MAXELEMENTS>::result.begin(), ThreadManager<SIZE, MAXELEMENTS>::result.end(), [&](std::pair<Key_t, Row> const& p){
+//      std::cout << "(" << p.first << ", " << p.second.value << ")" << std::endl;
+        finaleSum += p.second.value;
+    });
+    return finaleSum;
+}
+
 int main(int argc, char** argv)
 {
+
     if(argc != 4)
     {
         std::cerr << "usage:\n\thyperlike_parallel <num_threads> <num_unique_keys> <num_rows>" << std::endl;
@@ -280,12 +293,20 @@ int main(int argc, char** argv)
     //Checks whether relation was build correctly
     assert(relation.isCorrectSum());
     
+    
     ThreadManager<SIZE, MAXELEMENTS> manager(num_threads);
     
     timeAndProfileMT_OperationsPerSecond(num_threads, num_unique_keys, NUM_ROWS, [&](){
         //put aggregations here    
         manager.parallelGroup(relation);
     } );
-     
+    
+    auto should = relation.getSumOfWholeRelation();
+    auto is = getSumOfAllGroupValues<SIZE, MAXELEMENTS>();
+    std::cout << "should = " << should << std::endl;
+    std::cout << "is = " << is << std::endl;
+    
+    assert((relation.getSumOfWholeRelation() == getSumOfAllGroupValues<SIZE, MAXELEMENTS>()));
+            
 	return 0;
 }
