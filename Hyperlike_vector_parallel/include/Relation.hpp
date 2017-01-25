@@ -10,13 +10,16 @@ typedef int64_t Value_t;
 
 class alignas(64) Row
 {
+    
 public:
+    static const int64_t EMPTY = INT64_MIN;
+    
     Key_t key;
     Value_t value;
     
     Row() 
     {
-        key = -1;
+        key = EMPTY;
         value = 0;
     }
     

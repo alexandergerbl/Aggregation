@@ -6,15 +6,6 @@
 /*
  *	Hashtable -Settings
  **/
-constexpr int SIZE = 1'000;
-constexpr int MAXELEMENTS = 16'000;
-
-/*
- *	Relation -Settings
- **/
-const int64_t NUM_UNIQUE_KEYS = 1'000'000;
-const int64_t NUM_ROWS = 10'000'000;
-const bool UNIFORM_DISTRIBUTED_KEYS = true;
-
+constexpr int CACHE_SIZE = 256*1024;
 
 #endif
