@@ -73,7 +73,9 @@ constexpr int nextLowerPowerOfTwo(const int number)
 template<int CACHE_SIZE>
 struct HashTable
 {    
-    
+    static const Key_t partition_size = nextLowerPowerOfTwo(getMaxElements<CACHE_SIZE, Key_t, Value_t>());
+    static std::array<std::vector<Row>, HashTable<CACHE_SIZE>::partition_size> globalPartitions;
+    static std::array<std::mutex, HashTable<CACHE_SIZE>::partition_size> mutex;
     
     static const Key_t max_elements =  nextLowerPowerOfTwo(getMaxElements<CACHE_SIZE, Key_t, Value_t>());
     std::array<Row, max_elements> data;
@@ -126,6 +128,19 @@ struct HashTable
         std::fill(this->data.begin(), this->data.end(), Row());
     }
     
+    void flush_to_global_partition()
+    {
+        for(auto entry : this->data)
+        {
+            auto index = getIndex(hash(entry.key));
+            HashTable<CACHE_SIZE>::mutex[index].lock();
+            HashTable<CACHE_SIZE>::globalPartitions[index].emplace_back(entry);
+            HashTable<CACHE_SIZE>::mutex[index].unlock();
+        }
+        this->size = 0;
+        std::fill(this->data.begin(), this->data.end(), Row());
+    }
+    
     void insert(Key_t key, Value_t value)
     {
         auto index = getIndex(hash(key));
@@ -147,7 +162,7 @@ struct HashTable
         
             if(this->size == this->max_elements)
             {
-                this->flush();
+                this->flush_to_global_partition();
             }
         }
     }
@@ -176,9 +191,7 @@ class ThreadManager
     * GLOBAL PARTITIONS
     * 
     */    
-    static const Key_t partition_size = nextLowerPowerOfTwo(getMaxElements<CACHE_SIZE, Key_t, Value_t>());
-    static std::array<std::vector<Row>, ThreadManager<CACHE_SIZE>::partition_size> globalPartitions;
-    
+    static const Key_t partition_size = nextLowerPowerOfTwo(getMaxElements<CACHE_SIZE, Key_t, Value_t>());    
     
     typedef tbb::enumerable_thread_specific<ThreadWorker<CACHE_SIZE>> WorkerType;
     static WorkerType myWorkers;
@@ -219,8 +232,8 @@ public:
             {        
                 for(auto currWorker = myWorkers.begin(); currWorker != myWorkers.end(); ++currWorker)
                 {
-                    globalPartitions[currPartition].reserve(globalPartitions.size() + currWorker->localHashTable.localPartitions[currPartition].size());
-                    std::move(std::begin(currWorker->localHashTable.localPartitions[currPartition]), std::end(currWorker->localHashTable.localPartitions[currPartition]), std::back_inserter(globalPartitions[currPartition]));
+                    HashTable<CACHE_SIZE>::globalPartitions[currPartition].reserve(HashTable<CACHE_SIZE>::globalPartitions.size() + currWorker->localHashTable.localPartitions[currPartition].size());
+                    std::move(std::begin(currWorker->localHashTable.localPartitions[currPartition]), std::end(currWorker->localHashTable.localPartitions[currPartition]), std::back_inserter(HashTable<CACHE_SIZE>::globalPartitions[currPartition]));
                     currWorker->localHashTable.localPartitions[currPartition].clear();
                 }
             }
@@ -235,7 +248,7 @@ public:
                     
             for(int i = r.begin(); i != r.end(); ++i)
             {
-                for(auto currEntry = globalPartitions[i].begin(); currEntry != globalPartitions[i].end(); ++currEntry)
+                for(auto currEntry = HashTable<CACHE_SIZE>::globalPartitions[i].begin(); currEntry != HashTable<CACHE_SIZE>::globalPartitions[i].end(); ++currEntry)
                 {
                     if(my_worker.hashTable_secondPhase.count(currEntry->key) == 0)
                         my_worker.hashTable_secondPhase[currEntry->key] = currEntry->value;
@@ -275,14 +288,14 @@ public:
         }
 
         // exchange partitions
-        tbb::parallel_for(tbb::blocked_range<int>(0, this->globalPartitions.size()), ExchangePartitions());
+        tbb::parallel_for(tbb::blocked_range<int>(0, HashTable<CACHE_SIZE>::globalPartitions.size()), ExchangePartitions());
 
         /*
         * 
         * Phase 2
         *  
         */
-        tbb::parallel_for(tbb::blocked_range<int>(0, this->globalPartitions.size()), Phase2());
+        tbb::parallel_for(tbb::blocked_range<int>(0, HashTable<CACHE_SIZE>::globalPartitions.size()), Phase2());
 
         
 
@@ -290,9 +303,11 @@ public:
 };
 
 
+template<int CACHE_SIZE>
+std::array<std::mutex, HashTable<CACHE_SIZE>::partition_size> HashTable<CACHE_SIZE>::mutex;
 
 template<int CACHE_SIZE>
-std::array<std::vector<Row>, ThreadManager<CACHE_SIZE>::partition_size> ThreadManager<CACHE_SIZE>::globalPartitions;
+std::array<std::vector<Row>, HashTable<CACHE_SIZE>::partition_size> HashTable<CACHE_SIZE>::globalPartitions;
     
 template<int CACHE_SIZE>
 typename ThreadManager<CACHE_SIZE>::WorkerType ThreadManager<CACHE_SIZE>::myWorkers;
