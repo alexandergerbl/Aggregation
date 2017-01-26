@@ -133,9 +133,10 @@ struct HashTable
         for(auto entry : this->data)
         {
             auto index = getIndex(hash(entry.key));
-            HashTable<CACHE_SIZE>::mutex[index].lock();
-            HashTable<CACHE_SIZE>::globalPartitions[index].emplace_back(entry);
-            HashTable<CACHE_SIZE>::mutex[index].unlock();
+            {
+                std::unique_lock<std::mutex> lock{HashTable<CACHE_SIZE>::mutex[index]};
+                HashTable<CACHE_SIZE>::globalPartitions[index].emplace_back(entry);
+            }
         }
         this->size = 0;
         std::fill(this->data.begin(), this->data.end(), Row());

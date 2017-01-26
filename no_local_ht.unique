@@ -1,30 +1,10 @@
-4	1000000	39.8476 1.97383 misses 6.19296 L1misses 95.7421 instructions 0.0785738 bmisses 
-should = 50000005000000
-is = 0
-4	2000000	31.413 2.56321 misses 7.08166 L1misses 180.243 instructions 0.407245 bmisses 
-should = 50000005000000
-is = 0
-4	3000000	31.6492 2.58868 misses 6.95265 L1misses 118.635 instructions 0.219171 bmisses 
-should = 50000005000000
-is = 0
-4	4000000	35.5914 2.39894 misses 6.77969 L1misses 124.728 instructions 0.310495 bmisses 
-should = 50000005000000
-is = 0
-4	5000000	37.5591 2.11757 misses 6.42558 L1misses 102.364 instructions 0.123111 bmisses 
-should = 50000005000000
-is = 0
-4	6000000	37.8388 2.22971 misses 6.44784 L1misses 108.733 instructions 0.192659 bmisses 
-should = 50000005000000
-is = 0
-4	7000000	39.6723 1.97719 misses 6.20343 L1misses 96.185 instructions 0.0789605 bmisses 
-should = 50000005000000
-is = 0
-4	8000000	39.6099 2.02139 misses 6.27365 L1misses 99.6323 instructions 0.106384 bmisses 
-should = 50000005000000
-is = 0
-4	9000000	39.6321 1.9991 misses 6.22506 L1misses 96.7483 instructions 0.0855431 bmisses 
-should = 50000005000000
-is = 0
-4	10000000	38.3671 2.05958 misses 6.23703 L1misses 97.5109 instructions 0.0848254 bmisses 
-should = 50000005000000
-is = 0
+4	1000000	16.5371 3.79021 misses 11.9352 L1misses 234.939 instructions 0.699623 bmisses 
+4	2000000	15.808 3.86663 misses 13.7747 L1misses 266.008 instructions 0.672263 bmisses 
+4	3000000	14.797 3.79082 misses 15.1038 L1misses 303.466 instructions 0.95091 bmisses 
+4	4000000	14.4335 3.84814 misses 15.9188 L1misses 330.621 instructions 0.752658 bmisses 
+4	5000000	13.3513 3.90725 misses 17.314 L1misses 370.933 instructions 0.862914 bmisses 
+4	6000000	13.0646 3.88745 misses 17.8654 L1misses 402.971 instructions 0.950006 bmisses 
+4	7000000	12.6988 3.89638 misses 18.4191 L1misses 434.806 instructions 0.953659 bmisses 
+4	8000000	12.3899 4.02147 misses 18.637 L1misses 460.036 instructions 0.698357 bmisses 
+4	9000000	11.1418 4.23723 misses 20.7185 L1misses 509.453 instructions 0.536833 bmisses 
+4	10000000	11.0776 4.22731 misses 21.1205 L1misses 540.556 instructions 0.346154 bmisses 

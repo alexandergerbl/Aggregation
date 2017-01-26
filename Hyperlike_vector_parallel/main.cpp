@@ -337,7 +337,7 @@ int main(int argc, char** argv)
     assert(relation.isCorrectSum());
     
     
-    ThreadManager<32*1024> manager(num_threads);
+    ThreadManager<16*1024> manager(num_threads);
     
     timeAndProfileMT_OperationsPerSecond(num_threads, num_unique_keys, num_rows, [&](){
         //put aggregations here    

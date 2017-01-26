@@ -8,11 +8,10 @@ NUM_ROWS=10000000
 #  build programs
 #
 cd Global_Partitions && make && cd ..
-cd Hyperlike_shared_parallel && make && cd ..
 cd Hyperlike_vector_parallel && make && cd ..
 cd No_local_HT && make && cd ..
 
-programs=(no_local_ht hyperlike_shared_parallel hyperlike_vector_parallel global_partitions)
+programs=(no_local_ht hyperlike_vector_parallel global_partitions)
 
 #
 #  change num_threads
@@ -32,7 +31,7 @@ do
 	done
 done
 
-gnuplot -e "filename1='no_local_ht.num_threads';filename2='hyperlike_shared_parallel.num_threads';filename3='hyperlike_vector_parallel.num_threads';filename4='global_partitions.num_threads';ofilename='num_threads.png'" plot_num_threads.gnu
+gnuplot -e "filename1='no_local_ht.num_threads';filename2='hyperlike_vector_parallel.num_threads';filename3='global_partitions.num_threads';ofilename='num_threads.png'" plot_num_threads.gnu
 
 #
 #  change number of unique keys
@@ -51,6 +50,6 @@ do
 	done
 done
 
-gnuplot -e "filename1='no_local_ht.unique';filename2='hyperlike_shared_parallel.unique';filename3='hyperlike_vector_parallel.unique';filename4='global_partitions.unique';ofilename='unique.png'" plot_num_threads.gnu_unique
+gnuplot -e "filename1='no_local_ht.unique';filename2='hyperlike_vector_parallel.unique';filename3='global_partitions.unique';ofilename='unique.png'" plot_num_threads.gnu_unique
 
 #
