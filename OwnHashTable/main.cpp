@@ -264,15 +264,81 @@ int main(int argc, char** argv)
         });
     }
     
+    
+    std::cout << "\n##########################################\n" << std::endl;
     /*
      * HashTable2 - TEST
      */
         
     {
 
-        HashTable<64*1024> table;
+        HashTable<32> table;
         
-        timeAndProfile("HashTable2 16 KiB", num_rows, [&](){
+        timeAndProfile("HashTable 32B", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+    /*
+     * HashTable2 - TEST
+     */
+        
+    {
+
+        HashTable<256> table;
+        
+        timeAndProfile("HashTable 256B", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+    /*
+     * HashTable2 - TEST
+     */
+        
+    {
+
+        HashTable<4*1024> table;
+        
+        timeAndProfile("HashTable 4 KiB", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+    /*
+     * HashTable2 - TEST
+     */
+        
+    {
+
+        HashTable<8*1024> table;
+        
+        timeAndProfile("HashTable 8 KiB", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+    /*
+     * HashTable2 - TEST
+     */
+        
+    {
+
+        HashTable<16*1024> table;
+        
+        timeAndProfile("HashTable 16 KiB", num_rows, [&](){
             for(auto& row : relation)
             {
                 table.insert(row.key, row.value);
@@ -288,7 +354,7 @@ int main(int argc, char** argv)
     {
         HashTable<32*1024> table;
 
-        timeAndProfile("HashTable2 32 KiB", num_rows, [&](){
+        timeAndProfile("HashTable 32 KiB", num_rows, [&](){
             for(auto& row : relation)
             {
                 table.insert(row.key, row.value);
@@ -314,7 +380,7 @@ int main(int argc, char** argv)
     {
         HashTable<64*1024> table;
         
-        timeAndProfile("HashTable2 64 KiB", num_rows, [&](){
+        timeAndProfile("HashTable 64 KiB", num_rows, [&](){
             for(auto& row : relation)
             {
                 table.insert(row.key, row.value);
@@ -329,7 +395,7 @@ int main(int argc, char** argv)
     {
         HashTable<128*1024> table;
 
-        timeAndProfile("HashTable2 128 KiB", num_rows, [&](){
+        timeAndProfile("HashTable 128 KiB", num_rows, [&](){
             for(auto& row : relation)
             {
                 table.insert(row.key, row.value);
@@ -337,6 +403,130 @@ int main(int argc, char** argv)
             table.final_flush();
         });
     }
+    std::cout << "\n##########################################\n" << std::endl;
+     /*
+     * HashTable2 - TEST
+     */
+        
+    {
+
+        HashTable2<1024> table;
+        
+        timeAndProfile("HashTable 1 KiB", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+     /*
+     * HashTable2 - TEST
+     */
+        
+    {
+
+        HashTable2<4*1024> table;
+        
+        timeAndProfile("HashTable 4 KiB", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+    /*
+     * HashTable2 - TEST
+     */
+        
+    {
+
+        HashTable2<8*1024> table;
+        
+        timeAndProfile("HashTable 8 KiB", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+    /*
+     * HashTable2 - TEST
+     */
+    {
+        HashTable2<16*1024> table;
+
+        timeAndProfile("HashTable(%) 16 KiB", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+    
+    /*
+     * myhashtable - TEST
+     */
+        
+    {
+        HashTable2<32*1024> table;
+
+        timeAndProfile("HashTable(%) 32 KiB", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+        
+        int64_t sum = 0;
+        for(auto& partition : table.localPartitions)
+        {
+            for(auto it = partition.begin(); it != partition.end(); it++)
+                    sum += it->value;
+        }
+        assert((sum == 50000005000000));
+
+    }
+    
+    /*
+     * HashTable2 - TEST
+     */
+        
+    {
+
+        HashTable2<64*1024> table;
+        
+        timeAndProfile("HashTable(%) 64 KiB", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+        
+    
+    /*
+     * HashTable2 - TEST
+     */
+        
+    {
+        HashTable2<128*1024> table;
+        
+        timeAndProfile("HashTable(%) 128 KiB", num_rows, [&](){
+            for(auto& row : relation)
+            {
+                table.insert(row.key, row.value);
+            }
+            table.final_flush();
+        });
+    }
+    
+    
     
     //Checks whether relation was build correctly
     assert(relation.isCorrectSum());
