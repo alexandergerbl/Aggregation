@@ -163,8 +163,7 @@ public:
     
     HashTable<CACHE_SIZE> localHashTable;
     
-    std::unordered_map<Key_t, Value_t> hashTable_secondPhase;
-    
+    //std::unordered_map<Key_t, Value_t> hashTable_secondPhase;    
 };
 
 
@@ -232,23 +231,30 @@ public:
         void operator()(const tbb::blocked_range<int> &r) const
         {
             typename WorkerType::reference my_worker = myWorkers.local();
-                    
+            
+    
+             
             for(int i = r.begin(); i != r.end(); ++i)
             {
+                std::unordered_map<Key_t, Value_t> hashTable_secondPhase(globalPartitions[i].size()/4);
+
                 for(auto currEntry = globalPartitions[i].begin(); currEntry != globalPartitions[i].end(); ++currEntry)
                 {
-                    if(my_worker.hashTable_secondPhase.count(currEntry->key) == 0)
-                        my_worker.hashTable_secondPhase[currEntry->key] = currEntry->value;
+                    if(hashTable_secondPhase.count(currEntry->key) == 0)
+                        hashTable_secondPhase[currEntry->key] = currEntry->value;
                     else
-                        my_worker.hashTable_secondPhase[currEntry->key] += currEntry->value;
+                        hashTable_secondPhase[currEntry->key] += currEntry->value;
                 }
+
                 result_mutex.lock();
-                for(auto& hash_table_entry : my_worker.hashTable_secondPhase)
+
+                for(auto& hash_table_entry : hashTable_secondPhase)
                 {
                     result.emplace_back(Row(hash_table_entry.first, hash_table_entry.second));
                 }
+
                 result_mutex.unlock();
-                my_worker.hashTable_secondPhase.clear();
+                hashTable_secondPhase.clear();
             }
         }
     };
