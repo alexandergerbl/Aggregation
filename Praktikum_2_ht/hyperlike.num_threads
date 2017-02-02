@@ -1,0 +1,8 @@
+Took = 2.26101s
+1	1000000	4.42266 3.84423 misses 59.6744 L1misses 2313.04 instructions 3.52156 bmisses 
+Took = 1.22405s
+2	1000000	8.16867 3.44991 misses 55.8649 L1misses 2039.1 instructions 2.51377 bmisses 
+Took = 0.915573s
+3	1000000	10.9214 3.64072 misses 54.5467 L1misses 1991.49 instructions 2.3704 bmisses 
+Took = 0.969912s
+4	1000000	10.3094 4.31341 misses 55.6416 L1misses 2022.76 instructions 2.49642 bmisses 

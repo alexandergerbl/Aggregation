@@ -1,0 +1,10 @@
+4	100000	11.9413 2.59681 misses 52.2579 L1misses 781.68 instructions 1.941 bmisses 
+4	1100000	9.24023 2.77094 misses 54.2019 L1misses 2031.92 instructions 2.04039 bmisses 
+4	2100000	7.7538 2.5764 misses 62.7397 L1misses 3249.12 instructions 1.96756 bmisses 
+4	3100000	6.49829 2.60244 misses 247.133 L1misses 4425.45 instructions 1.88309 bmisses 
+4	4100000	5.59987 2.50026 misses 410.732 L1misses 5585.39 instructions 1.92352 bmisses 
+4	5100000	4.68962 2.59336 misses 570.844 L1misses 6886.07 instructions 1.96571 bmisses 
+4	6100000	4.11592 3.95413 misses 679.161 L1misses 7882.81 instructions 2.62573 bmisses 
+4	7100000	3.75749 3.67827 misses 798.437 L1misses 8993.44 instructions 2.67464 bmisses 
+4	8100000	3.07592 5.10505 misses 940.812 L1misses 10592.2 instructions 4.42958 bmisses 
+4	9100000	2.95769 4.88229 misses 1090.35 L1misses 11716.4 instructions 3.06376 bmisses 

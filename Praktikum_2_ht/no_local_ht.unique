@@ -1,0 +1,20 @@
+Took = 0.544432s
+4	100000	18.3655 4.13803 misses 12.4213 L1misses 342.609 instructions 1.18908 bmisses 
+Took = 0.778691s
+4	1100000	12.8409 4.18115 misses 13.0208 L1misses 1566.07 instructions 1.15766 bmisses 
+Took = 1.05004s
+4	2100000	9.52281 4.61797 misses 22.656 L1misses 2809.64 instructions 1.39185 bmisses 
+Took = 1.25352s
+4	3100000	7.97713 4.17345 misses 210.25 L1misses 3983.55 instructions 1.12004 bmisses 
+Took = 1.54695s
+4	4100000	6.46409 4.38234 misses 370.749 L1misses 5176.29 instructions 1.36002 bmisses 
+Took = 2.89266s
+4	5100000	3.45693 9.42522 misses 548.786 L1misses 7534.75 instructions 6.29273 bmisses 
+Took = 2.37001s
+4	6100000	4.21926 6.92959 misses 642.602 L1misses 7693.72 instructions 2.1179 bmisses 
+Took = 2.57755s
+4	7100000	3.87953 6.84589 misses 762.5 L1misses 8855.26 instructions 2.31326 bmisses 
+Took = 2.6906s
+4	8100000	3.71655 5.70378 misses 895.466 L1misses 9949.52 instructions 1.60195 bmisses 
+Took = 3.4502s
+4	9100000	2.89831 8.36723 misses 1056.42 L1misses 11623.3 instructions 2.66267 bmisses 
